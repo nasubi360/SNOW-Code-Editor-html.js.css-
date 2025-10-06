@@ -1,2 +1,1 @@
-# SNOW-Code-Editor-html.js.css-
-これは少年・少女たちが作ったhtml.js.cssのコードエディターです！
+https://nasubi360.github.io/SNOW-Code-Editor-html.js.css-/
