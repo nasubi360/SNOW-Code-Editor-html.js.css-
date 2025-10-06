@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ブラウザだけ共同エディタ風</title>
+
+<!-- CodeMirror 5 CDN -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.13/lib/codemirror.css">
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.13/lib/codemirror.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.13/mode/htmlmixed/htmlmixed.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.13/mode/javascript/javascript.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.13/mode/css/css.js"></script>
+
+<style>
+body{margin:0;display:flex;flex-direction:column;height:100vh;font-family:sans-serif}
+header{background:#222;color:white;padding:8px;display:flex;align-items:center;gap:8px}
+#tabs{display:flex;gap:5px;background:#eee;padding:5px}
+#editor-container{flex:1;display:flex}
+#preview{flex:1;border:none;height:100%}
+.CodeMirror{flex:1;height:100%}
+</style>
+</head>
+<body>
+<header>
+  あなたの名前: <input id="username" value="guest" />
+  <button id="changeName">変更</button>
+  <button id="saveBtn">💾 保存（ブラウザに）</button>
+</header>
+
+<div id="tabs">
+  <button data-tab="html">HTML</button>
+  <button data-tab="css">CSS</button>
+  <button data-tab="js">JS</button>
+</div>
+
+<div id="editor-container"></div>
+<iframe id="preview"></iframe>
+
+<input type="file" id="imgImport" accept="image/*" style="display:none;">
+
+<script>
+let editor, currentTab="html";
+const preview=document.getElementById("preview");
+const usernameInput=document.getElementById("username");
+const codeData={html:"<h1>Hello!</h1>",css:"body{font-family:sans-serif}",js:""};
+
+// CodeMirror 初期化
+editor=CodeMirror(document.getElementById("editor-container"),{
+  value:codeData[currentTab],
+  lineNumbers:true,
+  mode:"htmlmixed",
+  theme:"default"
+});
+
+// タブ切替
+document.querySelectorAll("#tabs button").forEach(btn=>{
+  btn.onclick=()=>{
+    saveCurrentTab();
+    currentTab=btn.dataset.tab;
+    loadCurrentTab();
+  }
+});
+
+function saveCurrentTab(){ codeData[currentTab]=editor.getValue(); }
+function loadCurrentTab(){
+  editor.setValue(codeData[currentTab]);
+  if(currentTab==="html") editor.setOption("mode","htmlmixed");
+  else if(currentTab==="css") editor.setOption("mode","css");
+  else if(currentTab==="js") editor.setOption("mode","javascript");
+  editor.focus();
+  updatePreview();
+}
+
+// プレビュー更新
+function updatePreview(){
+  preview.srcdoc=`<style>${codeData.css}</style>${codeData.html}<script>${codeData.js}<\/script>`;
+}
+
+// 画像インポート
+document.addEventListener("keydown",(e)=>{ if(e.ctrlKey && e.key==="i") document.getElementById("imgImport").click(); });
+document.getElementById("imgImport").addEventListener("change",async (e)=>{
+  const file=e.target.files[0]; if(!file)return;
+  const base64=await fileToBase64(file);
+  editor.replaceSelection(`<img src="${base64}">`);
+});
+function fileToBase64(file){return new Promise(r=>{const reader=new FileReader();reader.onload=()=>r(reader.result);reader.readAsDataURL(file);});}
+
+// 保存（ブラウザLocalStorage）
+document.getElementById("saveBtn").onclick=()=>{
+  saveCurrentTab();
+  localStorage.setItem("browserEditor",JSON.stringify(codeData));
+  alert("ブラウザに保存しました！");
+};
+
+// 読み込み（あれば）
+window.onload=()=>{
+  const saved=localStorage.getItem("browserEditor");
+  if(saved){ Object.assign(codeData,JSON.parse(saved)); loadCurrentTab(); }
+};
+
+// ユーザー名変更
+document.getElementById("changeName").onclick=()=>{
+  alert(`名前を ${usernameInput.value} に変更しました`);
+};
+
+updatePreview();
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+body{margin:0;display:flex;flex-direction:column;height:100vh;font-family:sans-serif}
+header{background:#222;color:white;padding:8px;display:flex;align-items:center;gap:8px}
+#tabs{display:flex;gap:5px;background:#eee;padding:5px}
+#editor-container{flex:1;display:flex}
+#preview{flex:1;border:none;height:100%}
+.CodeMirror{flex:1;height:100%}
+#users{background:#f0f0f0;padding:5px}
